@@ -1,9 +1,11 @@
 classdef Schelling
     
     properties
+        number_of_agents
         width
         height
         empty_ratio
+        population_ratio
         similarity_threshold
         n_iterations
         agents
@@ -11,10 +13,12 @@ classdef Schelling
     end
     
     methods
-        function obj = Schelling(width, height, empty_ratio, similarity_threshold, n_iterations, file_name)
+        function obj = Schelling(number_of_agents, width, height, empty_ratio, population_ratio, similarity_threshold, n_iterations, file_name)
+            obj.number_of_agents = number_of_agents;
             obj.width = width;
             obj.height = height;
             obj.empty_ratio = empty_ratio;
+            obj.population_ratio = population_ratio;
             obj.similarity_threshold = similarity_threshold;
             obj.n_iterations = n_iterations;
             obj.agents = zeros(obj.width, obj.height);
@@ -22,10 +26,25 @@ classdef Schelling
         end
         
         function obj = populate(obj)
-            obj.agents = randi([0 1],obj.width, obj.height);
-            obj.agents(obj.agents == 0) = -1;
-            empty_index = randi([1 obj.width*obj.height], 1, obj.width*obj.height*obj.empty_ratio);
-            obj.agents(empty_index) = 0;
+            filled_cells = obj.width*obj.height - obj.width*obj.height*obj.empty_ratio - 1;
+            populated_cells = round(obj.population_ratio * filled_cells);
+            disp(populated_cells);
+            % Generate a 1 dimensional cell with proportionate values
+            obj.agents = zeros(1, obj.height*obj.width - sum(populated_cells));
+            for i=1:length(populated_cells)
+                obj.agents = [obj.agents ones(1, populated_cells(i))*i];
+            end
+            % Convert 1D cell to nxn and shuffle
+            obj.agents = reshape(obj.agents, [obj.height, obj.width]);
+            for i=1:obj.height
+                for j=1:obj.width
+                    xidx = randperm(obj.height, 1);
+                    yidx = randperm(obj.width, 1);
+                    temp = obj.agents(i,j);
+                    obj.agents(i,j) = obj.agents(xidx,yidx);
+                    obj.agents(xidx,yidx) = temp;
+                end
+            end
         end
         
         function val = is_unsatisfied(obj, x, y)
@@ -40,16 +59,20 @@ classdef Schelling
                     count_different = count_different+1;
                 end
             end
-            if count_similar+count_similar == 0
-                val = true;
-            else
-                val = (count_similar/(count_similar+count_different)) < obj.similarity_threshold;
+            if count_similar+count_different == 0
+                val = false;
+            elseif current_agent == 1
+                val = (count_similar/(count_similar+count_different)) < obj.similarity_threshold(1);
+            elseif current_agent == 2
+                val = (count_similar/(count_similar+count_different)) < obj.similarity_threshold(2);
+            elseif current_agent == 3
+                val = (count_similar/(count_similar+count_different)) < obj.similarity_threshold(3);
             end
         end
         
         function update(obj)
-            agent_matrix = zeros(obj.width,obj.height,obj.n_iterations);
-            agent_matrix(:,:,1) = obj.agents(:,:);
+                agent_matrix = zeros(obj.width,obj.height,obj.n_iterations);
+                agent_matrix(:,:,1) = obj.agents(:,:);
             for i=2:1:obj.n_iterations
                 n_changes = 0;
                 for j = 1:1:obj.width*obj.height
@@ -62,9 +85,11 @@ classdef Schelling
                         n_changes = n_changes+1;
                     end
                 end
-                spy(obj.agents(:,:) == -1,'b');
+                spy(obj.agents(:,:) == 1,'y');
                 hold on
-                spy(obj.agents(:,:) == 1, 'r');
+                spy(obj.agents(:,:) == 2,'r');
+                hold on
+                spy(obj.agents(:,:) == 3, 'c');
                 hold off
                 pause(0.01);
                 agent_matrix(:,:,i) = obj.agents(:,:);
@@ -87,7 +112,7 @@ classdef Schelling
             obj.agents(x,y) = 0;
         end
         
-        %Moore neighbourhood
+        % Moore neighbourhood
         function [indexes] = get_neighbours_index(obj, x, y)
             indexes = [];
             
@@ -122,4 +147,3 @@ classdef Schelling
     end
     
 end
-
