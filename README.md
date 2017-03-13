@@ -9,3 +9,15 @@ Schelling, Thomas C. 1971. "Dynamic Models of Segregation." Journal of Mathemati
 Sample simulation result for 50 % happines threshold and time steps 0, 4, 30:
 
 ![alt tag](https://raw.github.com/b3rnoulli/schelling/master/sample simulation.png)
+
+Variable number of agents
+-------------------------
+Input the number of agents required for the simulation.
+
+Population Ratio
+----------------
+Input the ratio of the number of individual agent types vs total number of all agents.
+
+Similarity thresold
+-------------------
+The number of similar agents surrounding an individual agent, in a square grid, to satisfy boundary conditions. For example, a similarity thresold of 3/8 will mean that out of a possible 8 possible positions surrounding an agent, at least 3 have to be of the same type.   
